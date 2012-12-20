@@ -1,0 +1,74 @@
+*implement of nand2
+.subckt nand2 a b z
+MPD1 z a 1 0 NENH sw=8 sl=1
+MPD2 1 b 0 0 NENH sw=8 sl=1
+MPU1 z a vdd vdd PENH sw=8 sl=1
+MPU2 z b vdd vdd PENH sw=8 sl=1
+.ends
+
+*implement of nandc
+.subckt nand3 a b c z
+MPD1 z a n1 0 NENH sw=8 sl=1
+MPD2 n1 b n2 0 NENH sw=8 sl=1
+MPD3 n2 c 0 0 NENH sw=8 sl=1
+MPU1 z a vdd vdd PENH sw=8 sl=1
+MPU2 z b vdd vdd PENH sw=8 sl=1
+MPU3 z c vdd vdd PENH sw=8 sl=1
+.ends
+
+*implement of inv 
+.subckt inv a z
+MPD1 z a 0 0 NENH sw=16 sl=1
+MPU1 z a vdd vdd PENH sw=16 sl=1
+.ends
+
+*implement of nor2
+.subckt nor2 a b z
+MPU1 z b t vdd PENH sw=8 sl=1
+MPU2 t a vdd vdd PENH sw=8 sl=1
+MPD1 z a 0 0 NENH sw=8 sl=1
+MPD2 z b 0 0 NENH sw=8 sl=1
+.ends
+
+*implement of nxor2
+.subckt nxor2 a b z
+X1 a b c nand2
+M1 z c vdd vdd PENH sw=4 sl=1
+M2 z a t vdd PENH sw=4 sl=1
+M3 t b vdd vdd PENH sw=4 sl=1
+M4 z c t1 0 NENH sw=2 sl=1
+M5 t1 b 0 0 NENH sw=2 sl=1
+M6 t1 a 0 0 NENH sw=2 sl=1
+.ends
+
+*implement xor2 a b z
+.subckt xor2 a b z
+X1 a b c nor2
+M1 z c p vdd PENH sw=4 sl=1
+M2 p a vdd vdd PENH sw=1 sl=1
+M3 p b vdd vdd PENH sw=4 sl=1
+M4 z a n 0 NENH sw=2 sl=1
+M5 n b 0 0 NENH sw=2 sl=1 
+M6 z c 0 0 NENH sw=2 sl=1
+.ends
+
+*implement FA a b ci s co
+.subckt FA a b ci s co
+X1 a b t1 xor2
+X2 t1 ci s xor2
+X3 a b t2 nand2
+X4 a ci t3 nand2
+X5 b ci t4 nand2
+X6 t2 t3 t4 co nand3
+.ends
+
+*implement ADDER4 a3 a2 a1 a0 b3 b2 b1 b0 s4 s3 s2 s1 s0
+.subckt ADDER4 a3 a2 a1 a0 b3 b2 b1 b0 s4 s3 s2 s1 s0
+Xbit0 a0 b0 0 s0 c0 FA
+Xbit1 a1 b1 c0 s1 c1 FA
+Xbit2 a2 b2 c1 s2 c2 FA
+Xbit3 a3 b3 c2 s3 s4 FA
+.ends
+
+
+
