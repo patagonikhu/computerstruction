@@ -1,0 +1,55 @@
+Timing analysis for _lab3_b.jsim at Tue Dec 25 19:24:27 CST 2012
+
+==================================================================
+
+Worst-case tPDs for top-level combinational paths
+
+  tPD from a0 to y7 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y7 [xalu.xarith.x1#24.xor2]
+
+  tPD from a0 to y31 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y31 [xalu.xarith.x1#0.xor2]
+
+  tPD from a0 to y26 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y26 [xalu.xarith.x1#5.xor2]
+
+  tPD from a0 to y22 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y22 [xalu.xarith.x1#9.xor2]
+
+  tPD from a0 to y2 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y2 [xalu.xarith.x1#29.xor2]
+
+  tPD from a0 to y18 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y18 [xalu.xarith.x1#13.xor2]
+
+  tPD from a0 to y19 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y19 [xalu.xarith.x1#12.xor2]
+
+  tPD from a0 to y1 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y1 [xalu.xarith.x1#30.xor2]
+
+  tPD from a0 to y10 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y10 [xalu.xarith.x1#21.xor2]
+
+  tPD from a0 to y11 (0.150ns):
+
+    + 0.000ns = 0.000ns a0 [wa#31]
+    + 0.150ns = 0.150ns y11 [xalu.xarith.x1#20.xor2]

@@ -2,8 +2,6 @@
 * is included that is computed from the .verify statements, so don't change
 * those or you won't be able to complete your checkoff!
 
-.include "nominal.jsim"
-.include "util.jsim"
 
 * a list of expected values for nodes s4, s3, s2, s1, s0.  The first data value
 * (0x00) is compared against the actual node values at time 9.9ns into the

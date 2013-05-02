@@ -1,0 +1,6 @@
+.include "./nominal.jsim"
+.include "./stdcell.jsim"
+.include "./lab6regfile.jsim"
+
+
+

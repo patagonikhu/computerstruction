@@ -1,0 +1,122 @@
+.include beta.uasm
+.include lab7macros.uasm
+.include lab7checkoff.uasm
+
+regs:
+RESERVE(32)
+
+UI:
+save_all_regs(regs)
+LD(xp,-4,r0) | illegal instruction
+extract_field(r0, 31, 26, r1)| extract opcode, bits 31:26
+CMPEQC(r1,0x10,r2)| OPCODE=LDB?
+BT(r2, ldb)| yes, handle the ldb instruction.
+CMPEQC(r1,0x11,r2)| OPCODE=LDB?
+BT(r2, stb)| yes, handle the stb instruction.
+LD(r31,regs,r0)| Itâs something else. Restore regs
+LD(r31,regs+4,r1)| we've used, and go to the system's
+LD(r31,regs+8,r2)| Illegal Instruction handler.
+BR(_IllegalInstruction)
+
+ldb:
+extract_field(r0, 25, 21, r1) | rc
+extract_field(r0, 20, 16, r2) | ra
+extract_field(r0, 15, 0, r3) | literal
+MULC(r1, 4, r1)| convert to byte offset into regs array
+MULC(r2, 4, r2)| convert to byte offset into regs array
+|.breakpoint
+LD(r2, regs, r4)
+ADD(r4,r3,r4) 
+SHLC(r4,16,r4) 
+SHRC(r4,16,r4) 
+ANDC(r4,0xff,r9)|ea -> r4
+LD(r4,0,r5) | r5 <- mdata
+ANDC(r4 0x3,r6)
+CMPEQC(r6,0x0,R7)
+BEQ(R7,not0)
+ANDC(r5,0xff,r8)
+ST(r8,regs,r1)
+not0:
+CMPEQC(r6,0x1,R7)
+BEQ(R7,not1)
+SHLC(r5,16,r8)
+SHRC(r8,24,r8)
+ST(r8,regs,r1)
+not1:
+CMPEQC(r6,0x2,R7)
+BEQ(R7,not2)
+SHLC(r5,8,r8)
+SHRC(r8,24,r8)
+ST(r8,regs,r1)
+not2:
+CMPEQC(r6,0x3,R7)
+BEQ(R7,not3)
+SHRC(r5,24,r8)
+ST(r8,regs,r1)
+not3:
+restore_all_regs(regs)
+JMP(xp)
+
+
+stb:
+extract_field(r0, 25, 21, r1) | rc
+extract_field(r0, 20, 16, r2) | ra
+extract_field(r0, 15, 0, r3) | literal
+MULC(r1, 4, r1)| convert to byte offset into regs array
+MULC(r2, 4, r2)| convert to byte offset into regs array
+LD(r2, regs, r4) | reg[ra] -> r4
+LD(r1, regs, r5) | reg[rc] -> r5
+ADD(r4,r3,r4) | ea -> r4
+SHLC(r4,16,r4) 
+SHRC(r4,16,r4) 
+ANDC(r4 0x3,r6)
+CMPEQC(r6,0x0,R7)
+.breakpoint
+BEQ(R7,snot0)
+LD(r4,0,r8)
+SHRC(r8,8,r9)
+SHLC(r9,8,r9)
+SHLC(r5,24,r5)
+SHRC(r5,24,r5)
+ADD(r5,r9,r5)
+ST(r5,0,r4)
+snot0:
+CMPEQC(r6,0x1,R7)
+BEQ(R7,snot1)
+LD(r4,0,r8)
+SHRC(r8,16,r9)
+SHLC(r9,16,r9)
+SHLC(r8,24,r10)
+SHRC(r10,24,r10)
+ADD(r9,r10,r10)
+SHLC(r5,24,r5)
+SHRC(r5,16,r5)
+ADD(r5,r10,r5)
+ST(r5,0,r4)
+snot1:
+CMPEQC(r6,0x2,R7)
+BEQ(R7,snot2)
+LD(r4,0,r8)
+SHRC(r8,24,r9)
+SHLC(r9,24,r9)
+SHLC(r8,16,r10)
+SHRC(r10,16,r10)
+ADD(r9,r10,r10)
+SHLC(r5,24,r5)
+SHRC(r5,8,r5)
+ADD(r5,r10,r5)
+ST(r5,0,r4)
+snot2:
+CMPEQC(r6,0x3,R7)
+BEQ(R7,snot3)
+LD(r4,0,r8)
+SHLC(r8,8,r10)
+SHRC(r10,8,r10)
+SHLC(r5,24,r5)
+ADD(r5,r10,r5)
+ST(r5,0,r4)
+snot3:
+restore_all_regs(regs)
+JMP(xp)
+
+

@@ -1,0 +1,5 @@
+.include "./nominal.jsim"
+.include "./stdcell.jsim"
+.include "./lab3_test_bool.jsim"
+
+

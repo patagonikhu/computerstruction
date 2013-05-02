@@ -1,0 +1,42 @@
+// paren matcher
+
+checkoff "6004.mit.edu/currentsemester/6004assignment.doit" "Lab #4" 1103641864
+
+symbols ( ) 0 1
+
+tape test1 (
+result1 test1 0
+
+tape test2 )
+result1 test2 0
+
+tape test3 ( )
+result1 test3 1
+
+tape test4 ) (
+result1 test4 0
+
+tape test5 ( ) ( ) ( ( ( ) ) ( ) ) ) ( )
+result1 test5 0
+
+tape test6 ( ) ( ( ( ) ( ( ( ) ) ( ) ) )
+result1 test6 0
+
+tape test7 ( ) ( ( ) ( ( ( ) ) ( ) ) )
+result1 test7 1
+
+// define additional symbols, your states and actions here
+states A B C
+
+//     old R   new     W  M
+action A   (   A       0  l
+action A   )   B       0  r
+action A   0   A       1  l
+action A   -   C       -  r
+action C   0   *halt*  0  -
+action C   1   C       1   r
+action C   -   *halt*       1   -
+action A   1   A       1  l
+action B   0   A       1  l
+action B   1   B       1  r
+action B   -   *halt*  0  -

@@ -90,13 +90,23 @@ Virq irq 0 pwl(0ns 0v, 1001ns 0v,
 .plot id[31:0]
 .plot ma[31:0]
 .plot moe
-.plot mrd[31:0]
+.plot x(mrd[31:0])
 .plot wr
 .plot mwd[31:0]
 .plot betaop(id[31:26])
 .plot reg(id[20:16])
 .plot reg(id[15:11])
 .plot reg(id[25:21])
+//.plot pcsel[2:0]
+//.plot _pcsel[2:0]
+//.plot x(z)
+//.plot radata[31:0]
+//.plot wdata[31:0]
+//.plot wdsel[1:0]
+//.plot a[31:0]
+//.plot  wasel 
+//.plot _id[25:21]
+//.plot b[31:0]
 
 .verify ia[31:0] periodic(199n,100n)
 + 0x80000000  // 199ns

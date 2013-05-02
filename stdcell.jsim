@@ -227,3 +227,256 @@ Xdreg d clk q $dreg size=56 tcd=30ps tpd=190ps tr=4300 tf=2500 cin=.002pf ts=200
 .gsubckt dlatch d clk q
 Xdlatch d clk q $dlatch size=36 tcd=30ps tpd=190ps tr=4300 tf=2500 cin=.002pf
 .ends
+
+*implement FA a b ci s co
+.gsubckt FA a b ci s co
+X1 a b t1 xor2
+X2 t1 ci s xor2
+X3 a b t2 nand2
+X4 a ci t3 nand2
+X5 b ci t4 nand2
+X6 t2 t3 t4 co nand3
+.ends
+
+*implement adder4 a3 a2 a1 a0 b3 b2 b1 b0 s4 s3 s2 s1 s0
+.subckt adder4 a3 a2 a1 a0 b3 b2 b1 b0 s4 s3 s2 s1 s0
+Xbit0 a0 b0 0 s0 c0 FA
+Xbit1 a1 b1 c0 s1 c1 FA
+Xbit2 a2 b2 c1 s2 c2 FA
+Xbit3 a3 b3 c2 s3 s4 FA
+.ends
+
+*implement comparsion
+.subckt compare32 ALUFN[2:1] z v n cmp[31:0]
+xdummy OUT[31:0] constant0
+.ends
+
+.subckt BOOL alufn[3:0] A[31:0] B[31:0] OUT[31:0]
+X1_1 A[31:0] _a[31:0] inverter
+X1_2 B[31:0] _b[31:0] inverter
+*and
+X1_3 _a[31:0] _b[31:0] alufn0#32 t1[31:0] and3
+X1_4 A[31:0] _b[31:0] alufn1#32 t2[31:0] and3
+X1_5 _a[31:0] B[31:0] alufn2#32 t3[31:0] and3
+X1_6 A[31:0] B[31:0] alufn3#32 t4[31:0] and3
+X1_7 t1[31:0] t2[31:0] t3[31:0] t4[31:0] out[31:0] or4
+.ends
+
+.subckt ARITH alufn[1:0] A[31:0] B[31:0] s[31:0] Z V N
+X11 B[31:0] ALUFN0#32 T[31:0] xor2
+X2 ALUFN0 0 vdd c0 mux2
+X3 A[31:0] T[31:0] c[31:0] s[31:0] c[32:1] FA
+X4 s[7:0] s[15:8] s[23:16] s[31:24] z1[7:0] or4
+X5 z1[1:0] z1[3:2] z1[5:4] z1[7:6] z1_1[1:0] or4
+X6 z1_10 z1_11 z nor2
+X7 s31 n_s31 inverter
+X8 A31 n_A31 inverter
+X9 T31 n_t31 inverter
+X1_1 A31 T31 n_s31 v1 and3
+X1_2 n_A31 n_t31 s31 v2 and3
+X1_3 v1 v2 v or2
+.connect s31 n
+.ends
+
+.subckt x32 A[31:0] B[31:0] C out[31:0]
+X2_1 C#32 A[31:0] B[31:0] out[31:0] mux2
+.ends
+
+.subckt left_shift A[31:0] B[4:0] GND out[31:0]
+X1_1 A[31:0] A[15:0] GND#16 B4 W[31:0] x32
+X1_2 W[31:0] W[23:0] GND#8 B3 X[31:0] x32
+X1_3 X[31:0] X[27:0] GND#4 B2 Y[31:0] x32
+X1_4 Y[31:0] Y[29:0] GND#2 B1 Z[31:0] x32
+X1_5 Z[31:0] Z[30:0] GND B0 out[31:0] x32
+.ends
+
+.subckt SHIFT alufn[1:0] A[31:0] B[31:0] OUT[31:0]
+X1_1 alufn0#32 A[31:0] A[0:31] _A[31:0] mux2
+X1_2 alufn1 0 _A[0] GND mux2
+x1_3 _A[31:0] B[4:0] GND _OUT[31:0] left_shift
+*x1_3 A[31:0] B[4:0] 0 OUT[31:0] left_shift
+X1_4 alufn0#32 _OUT[31:0] _OUT[0:31] OUT[31:0] mux2
+.ends
+
+.subckt CMP alufn3 alufn1 Z V N OUT[31:0]
+xdummy OUT[31:1] constant0
+X1_1 alufn3 _alufn3 inverter
+X1_2 alufn1 _alufn1 inverter
+X1_3 z _alufn3 _alufn1 t1 and3
+X1_4 n v t2 xor2
+X1_5 t2 _alufn3 alufn1 t3 and3
+X1_6 z t2 t4 or2
+X1_7 t4 alufn3 _alufn1 t5 and3
+X1_8 t1 t3 t5 out0 or3
+.ends
+
+.subckt alu alufn[4:0] a[31:0] b[31:0] out[31:0] z v n
+*** Generate outputs from each of BOOL, SHIFT, ARITH, CMP subcircuits:
+xbool alufn[3:0] a[31:0] b[31:0] boolout[31:0] BOOL
+xshift alufn[1:0] a[31:0] b[31:0] shiftout[31:0] SHIFT
+xarith alufn[1:0] a[31:0] b[31:0] arithout[31:0] z v n ARITH
+xcmp alufn[3] alufn[1] z v n cmpout[31:0] CMP
+xmux1 alufn[4]#32 nonbool[31:0] boolout[31:0] out[31:0] mux2
+xmux2 alufn[2]#32 arithshift[31:0] cmpout[31:0] nonbool[31:0] mux2
+xmux3 alufn[3]#32 arithout[31:0] shiftout[31:0] arithshift[31:0] mux2
+.ends
+
+.subckt add_constant4 a[31:0] out[31:0]
+Xconst1_1 B[31:3] constant0
+Xconst2_1 B2 constant1
+Xconst3_1 B[1:0] constant0
+Xconst5_1 alufn[1:0] constant0
+Xadd alufn[1:0] a[31:0] B[31:0]  out[31:0] Z V N ARITH 
+.ends
+
+.subckt add32_2 a[31:0] b[31:0] out[31:0]
+Xconst5_1 alufn[1:0] constant0
+Xadd alufn[1:0] a[31:0] b[31:0] out[31:0] Z V N ARITH 
+.ends
+
+.subckt add32_3 a[31:0] b[31:0] c[31:0] out[31:0]
+Xconst5_1 alufn[1:0] constant0
+Xadd1_1 alufn[1:0] a[31:0] b[31:0] d[31:0] Z V N ARITH 
+Xadd2_1 alufn[1:0] d[31:0] c[31:0] out[31:0] Z1 V1 N1 ARITH 
+.ends
+
+.subckt mux8 s0 s1 s2 d[0:7] z
+Xinternal1 s0 s1 d0 d1 d2 d3 a mux4
+Xinternal2 s0 s1 d4 d5 d6 d7 b mux4
+Xinternal3 s2 a b z mux2
+.ends
+
+.subckt pc clk reset pcsel[2:0] ia[31:0] j[31:0] c[31:0] pc4c[31:0]
+Xreg iaa[31:0] clk#32 ia[31:0] dreg
+Xconst4_1 zz constant0
+Xadd1_1 ia[31:0] pc4[31:0] add_constant4
+Xadd2_1 pc4[31:0] c[29:0] 0 0 pc4c[31:0] add32_2
+Xmux2_1 ia31 0 j31 nj31 mux2
+Xmux1_1 pcsel0#32 pcsel1#32 pcsel2#32 ia31 pc4[30:0] ia31 pc4c[30:0] nj31 j[30:0] vdd 0#28 vdd 0#2 vdd 0#27 vdd 0#3 0#32 0#32 0#32 s[31:0] mux8 
+Xmux3_1 reset#32 s[31:0] vdd 0#31 iaa[31:0] mux2
+.ends
+
+.subckt regfile clk werf ra2sel ra[4:0] rb[4:0] rc[4:0]
++ wdata[31:0] radata[31:0] rbdata[31:0]
+Xmux1_1 ra2sel#5 rb[4:0] rc[4:0] ra2mux[4:0] mux2
+Xand1 ra4 ra3 ra2 _a_ra_1 and3
+Xand2 _a_ra_1 ra1 ra0 _a_ra_2 and3
+Xand3 ra2mux4 ra2mux3 ra2mux2 _b_rb_1 and3
+Xand4 _b_rb_1 ra2mux1 ra2mux0 _b_rb_2 and3
+Xzero zero constant0
+Xregfile
++ vdd 0 0 ra[4:0] _radata[31:0]
++ vdd 0 0 ra2mux[4:0] _rbdata[31:0] 
++ 0 clk werf rc[4:0] wdata[31:0]
++ $memory width=32 nlocations=31
+Xmux2_1 _a_ra_2#32 _radata[31:0] zero#32 radata[31:0] mux2
+Xmux3_1 _b_rb_2#32 _rbdata[31:0] zero#32 rbdata[31:0] mux2
+.ends
+
+.subckt equl6 a[5:0] b[5:0] Z
+Xadd 0 vdd 0#26 a[5:0] 0#26 b[5:0] out[31:0] Z V N ARITH 
+.ends
+
+.subckt ctl reset irq z id[31:26] ra2sel bsel alufn[4:0] wdsel[1:0] werf moe wr pcsel[2:0] wasel asel
+Xirq irq#6 id[31:26] 0#6 _id[5:0] mux2
+Xctl vdd 0 0 _id[5:0]
++ _pcsel[2:0] wasel asel ra2sel bsel alufn[4:0] wdsel[1:0] werf moe xwr
++ $memory width=17 nlocations=64 contents=(
++ 0b10010000000000100 //000000 irq
++ 0b01110000000000100 //000001
++ 0b01110000000000100 //000010
++ 0b01110000000000100 //000011
++ 0b01110000000000100 //000100
++ 0b01110000000000100 //000101
++ 0b01110000000000100 //000110
++ 0b01110000000000100 //000111
++ 0b01110000000000100 //001000
++ 0b01110000000000100 //001001
++ 0b01110000000000100 //001010
++ 0b01110000000000100 //001011
++ 0b01110000000000100 //001100
++ 0b01110000000000100 //001101
++ 0b01110000000000100 //001110
++ 0b01110000000000100 //001111
++ 0b01110000000000100 //010000
++ 0b01110000000000100 //010001
++ 0b01110000000000100 //010010
++ 0b01110000000000100 //010011
++ 0b01110000000000100 //010100
++ 0b01110000000000100 //010101
++ 0b01110000000000100 //010110
++ 0b01110000000000100 //010111
++ 0b00000010000010110 //011000 LD
++ 0b00000110000000001 //011001 ST
++ 0b01110000000000100 //011010
++ 0b01000000000000100 //011011 JMP
++ 0b00000000000000100 //011100  BEQ
++ 0b00000000000000100 //011101  BNE
++ 0b01110000000000100 //011110
++ 0b00001001101010110 //011111  LDR
++ 0b00000000000001100 //100000  ADD
++ 0b00000000000101100 //100001  SUB
++ 0b00000000000001100 //100010 MUL
++ 0b00000000000001100 //100011 DIV
++ 0b00000000010101100 //100100 CMPEQ
++ 0b00000000011101100 //100101 CMPLT
++ 0b00000000110101100 //100110 CMPLE
++ 0b01110000000000100 //100111 
++ 0b00000001100001100 //101000 AND
++ 0b00000001111001100 //101001 OR
++ 0b00000001011001100 //101010 XOR
++ 0b00000001100101100 //101011 XNOR
++ 0b00000000100001100 //101100 SHL
++ 0b00000000100101100 //101101 SHR
++ 0b00000000101101100 //101110 SRA
++ 0b01110000000000100 //101111
++ 0b00000010000001100 //110000 ADDC
++ 0b00000010000101100 //110001 SUBC
++ 0b00000010000001100 //110010 MULC
++ 0b00000010000001100 //110011 DIVC
++ 0b00000010010101100 //110100 CMPEQC
++ 0b00000010011101100 //110101 CMPLTC
++ 0b00000010110101100 //110110 CMPLEC
++ 0b01110000000000100 //110111
++ 0b00000011100001100 //111000 ANDC
++ 0b00000011111001100 //111001 ORC
++ 0b00000011011001100 //111010 XORC
++ 0b00000011100101100 //111011 XNORC
++ 0b00000010100001100 //111100 SHLC
++ 0b00000010100101100 //111101 SHRC
++ 0b00000010101101100 //111110 SRAC
++ 0b01110000000000100 //111111
++ )
+Xmux1 reset xwr 0 wr mux2
+Xequl6 _id[5:0] 0 vdd vdd vdd 0 0 peq equl6
+Xequl66 _id[5:0] 0 vdd vdd vdd 0 vdd pnq equl6
+Xinverter z _z inverter
+Xmux3_1 peq#3 pnq#3 _pcsel[2:0] 0 0 z 0 0 _z 0#3 pcsel[2:0] mux4
+.ends
+
+.subckt isz a[31:0] z
+Xand1 a[0:7] a[8:15] a[16:23] a[24:31] b[0:7] or4
+Xand2 b[0:1] b[2:3] b[4:5] b[6:7] c[0:1] or4
+Xand3 c0 c1 _z or2
+Xinverter _z z inverter
+.ends
+
+.subckt beta clk reset irq ia[31:0] id[31:0] ma[31:0]
++ moe mrd[31:0] wr mwd[31:0]
+Xpc clk reset pcsel[2:0] ia[31:0] radata[31:0] id15#16 id[15:0] pc4c[31:0] pc
+Xmu2_1 wasel#5 id[25:21] vdd#4 0 _id[25:21] mux2
+Xregfile clk werf ra2sel id[20:16] id[15:11] _id[25:21] wdata[31:0] radata[31:0] mwd[31:0] regfile
+Xinver ia31 _ia31 inverter
+Xirq irq _ia31 _irq and2
+Xctl reset _irq z id[31:26] ra2sel bsel alufn[4:0] wdsel[1:0] werf moe wr pcsel[2:0] wasel asel ctl
+Xmux1_1 bsel#32 mwd[31:0] id15#16 id[15:0] b[31:0] mux2
+Xmu1_1 asel#32 radata[31:0] 0 pc4c[30:0] a[31:0] mux2
+Xisz radata[31:0] z isz
+Xalu alufn[4:0] a[31:0] b[31:0] ma[31:0] zz v n alu
+Xadd_constant4 ia[31:0] pc4[31:0] add_constant4
+Xmux3_1 wdsel0#32 wdsel1#32 ia31 pc4[30:0] ma[31:0] mrd[31:0] 0#32 wdata[31:0] mux4
+.ends
+
+
+
+
